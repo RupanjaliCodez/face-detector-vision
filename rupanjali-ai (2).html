@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rupanjali AI — Real-Time Face &amp; Emotion Intelligence</title>
+<meta name="description" content="Rupanjali AI — real-time face detection and emotion analysis platform running entirely in your browser.">
+
+<!-- ===================== FONTS ===================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================================
+   ROOT TOKENS
+   ========================================================================= */
+:root{
+  --bg-void:#0A0D12;
+  --bg-deep:#0D1219;
+  --bg-surface:#10161F;
+  --bg-card:rgba(255,255,255,0.035);
+  --bg-card-hover:rgba(255,255,255,0.055);
+  --border-hair:rgba(255,255,255,0.07);
+  --border-hair-strong:rgba(255,255,255,0.12);
+  --ink:#EDF1F5;
+  --ink-soft:#C3CAD4;
+  --ink-dim:#7C8696;
+  --ink-faint:#4B5563;
+  --accent:#7DD3F0;
+  --accent-dim:#3E6F82;
+  --accent-glow:rgba(125,211,240,0.35);
+  --silver:#A8B3C2;
+
+  --state-happy:#6FE3B4;
+  --state-sad:#7AA3D9;
+  --state-angry:#E8716B;
+  --state-neutral:#9AA6B6;
+  --state-surprised:#E8C56B;
+  --state-fearful:#B98AE3;
+  --state-disgusted:#8FBF6E;
+
+  --r-sm:10px;
+  --r-md:16px;
+  --r-lg:22px;
+  --r-pill:999px;
+
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 20px 60px -20px rgba(0,0,0,0.65);
+  --shadow-soft: 0 12px 40px -16px rgba(0,0,0,0.5);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+html{ -webkit-text-size-adjust:100%; }
+body{
+  background:
+    radial-gradient(circle at 18% 0%, rgba(125,211,240,0.07), transparent 45%),
+    radial-gradient(circle at 100% 30%, rgba(125,211,240,0.05), transparent 40%),
+    var(--bg-void);
+  color:var(--ink);
+  font-family:var(--font-body);
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{ display:block; max-width:100%; }
+button{ font-family:inherit; cursor:pointer; }
+a{ color:inherit; text-decoration:none; }
+::selection{ background:var(--accent-glow); }
+
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+}
+
+/* scrollbar (desktop polish, harmless on mobile) */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:var(--border-hair-strong); border-radius:10px; }
+::-webkit-scrollbar-thumb:hover{ background:var(--ink-faint); }
+
+/* =========================================================================
+   LAYOUT SHELL
+   ========================================================================= */
+.shell{
+  max-width:1440px;
+  margin:0 auto;
+  padding:0 28px 0;
+}
+@media (max-width: 860px){
+  .shell{ padding:0 16px; }
+}
+
+/* =========================================================================
+   TOP NAV
+   ========================================================================= */
+.topnav{
+  position:sticky; top:0; z-index:50;
+  background:rgba(10,13,18,0.72);
+  backdrop-filter:blur(18px) saturate(140%);
+  -webkit-backdrop-filter:blur(18px) saturate(140%);
+  border-bottom:1px solid var(--border-hair);
+}
+.topnav-inner{
+  max-width:1440px; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 28px;
+}
+@media (max-width:860px){ .topnav-inner{ padding:14px 16px; } }
+
+.brand{ display:flex; align-items:center; gap:12px; min-width:0; }
+.brand-mark{
+  width:38px; height:38px; flex:none;
+  background:#000;
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--border-hair-strong);
+  overflow:hidden;
+}
+.brand-mark svg{ width:22px; height:22px; }
+.brand-text{ display:flex; flex-direction:column; line-height:1.05; min-width:0; }
+.brand-name{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:17px;
+  letter-spacing:0.01em;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.brand-sub{
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--ink-dim);
+  margin-top:3px;
+  white-space:nowrap;
+}
+
+.nav-status{
+  display:flex; align-items:center; gap:10px;
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--ink-dim);
+  padding:7px 14px;
+  border:1px solid var(--border-hair);
+  border-radius:var(--r-pill);
+  background:var(--bg-card);
+  white-space:nowrap;
+}
+.nav-dot{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--ink-faint);
+  transition:background .4s var(--ease), box-shadow .4s var(--ease);
+}
+.nav-dot.live{
+  background:var(--state-happy);
+  box-shadow:0 0 0 0 rgba(111,227,180,0.6);
+  animation:pulse-dot 2s var(--ease) infinite;
+}
+@keyframes pulse-dot{
+  0%{ box-shadow:0 0 0 0 rgba(111,227,180,0.45); }
+  70%{ box-shadow:0 0 0 7px rgba(111,227,180,0); }
+  100%{ box-shadow:0 0 0 0 rgba(111,227,180,0); }
+}
+@media (max-width:560px){
+  .nav-status span.full-text{ display:none; }
+}
+
+/* =========================================================================
+   HERO
+   ========================================================================= */
+.hero{
+  padding:56px 0 36px;
+  display:flex; flex-direction:column; gap:14px;
+}
+.hero-eyebrow{
+  font-family:var(--font-mono);
+  font-size:11px;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--accent);
+  display:flex; align-items:center; gap:10px;
+}
+.hero-eyebrow::before{
+  content:'';
+  width:18px; height:1px;
+  background:var(--accent);
+  display:inline-block;
+}
+.hero h1{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:clamp(28px, 4.2vw, 46px);
+  line-height:1.08;
+  letter-spacing:-0.01em;
+  max-width:18ch;
+}
+.hero h1 em{
+  font-style:normal;
+  color:var(--accent);
+}
+.hero p{
+  color:var(--ink-dim);
+  font-size:15px;
+  line-height:1.6;
+  max-width:54ch;
+}
+@media (max-width:860px){
+  .hero{ padding:36px 0 28px; }
+}
+
+/* =========================================================================
+   MAIN GRID
+   ========================================================================= */
+.main-grid{
+  display:grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap:22px;
+  padding-bottom:40px;
+  align-items:start;
+}
+@media (max-width:1024px){
+  .main-grid{ grid-template-columns:1fr; }
+}
+
+.col{ display:flex; flex-direction:column; gap:18px; min-width:0; }
+
+/* =========================================================================
+   CARD BASE
+   ========================================================================= */
+.card{
+  background:var(--bg-card);
+  border:1px solid var(--border-hair);
+  border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);
+  position:relative;
+  overflow:hidden;
+}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 20px 0;
+}
+.card-title{
+  font-family:var(--font-display);
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:0.01em;
+  color:var(--ink);
+  display:flex; align-items:center; gap:9px;
+}
+.card-title .ttick{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-glow);
+  flex:none;
+}
+.card-tag{
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  border:1px solid var(--border-hair);
+  padding:4px 9px;
+  border-radius:var(--r-pill);
+}
+
+/* =========================================================================
+   CAMERA CARD
+   ========================================================================= */
+.camera-card .card-head{ padding-bottom:14px; }
+.camera-stage{
+  position:relative;
+  margin:0 16px 16px;
+  border-radius:var(--r-md);
+  overflow:hidden;
+  background:#000;
+  aspect-ratio:4/3;
+  border:1px solid var(--border-hair-strong);
+}
+@media (max-width:560px){
+  .camera-stage{ aspect-ratio:3/4; margin:0 12px 12px; }
+}
+.camera-stage video{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  transform:scaleX(-1); /* mirror like a mirror, natural for selfie */
+}
+.camera-stage canvas{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  transform:scaleX(-1);
+}
+.camera-overlay-ui{
+  position:absolute; inset:0;
+  pointer-events:none;
+  transform:none;
+}
+.corner{
+  position:absolute;
+  width:22px; height:22px;
+  border:2px solid var(--accent);
+  opacity:0.85;
+}
+.corner.tl{ top:14px; left:14px; border-right:none; border-bottom:none; border-top-left-radius:6px; }
+.corner.tr{ top:14px; right:14px; border-left:none; border-bottom:none; border-top-right-radius:6px; }
+.corner.bl{ bottom:14px; left:14px; border-right:none; border-top:none; border-bottom-left-radius:6px; }
+.corner.br{ bottom:14px; right:14px; border-left:none; border-top:none; border-bottom-right-radius:6px; }
+
+.scan-line{
+  position:absolute; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent) 50%, transparent);
+  opacity:0;
+  box-shadow:0 0 12px var(--accent-glow);
+}
+.scan-line.active{
+  animation:scan-sweep 2.6s ease-in-out infinite;
+}
+@keyframes scan-sweep{
+  0%{ top:8%; opacity:0; }
+  10%{ opacity:0.8; }
+  50%{ top:92%; opacity:0.8; }
+  60%{ opacity:0; }
+  100%{ top:92%; opacity:0; }
+}
+
+.camera-placeholder{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:16px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(125,211,240,0.06), transparent 60%),
+    var(--bg-deep);
+  text-align:center; padding:24px;
+}
+.cam-icon{
+  width:56px; height:56px;
+  border-radius:50%;
+  border:1px solid var(--border-hair-strong);
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ink-dim);
+}
+.camera-placeholder p{
+  font-size:13px; color:var(--ink-dim); max-width:30ch; line-height:1.5;
+}
+.btn{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:13px;
+  padding:11px 22px;
+  border-radius:var(--r-pill);
+  border:1px solid var(--accent-dim);
+  background:linear-gradient(180deg, rgba(125,211,240,0.18), rgba(125,211,240,0.07));
+  color:var(--accent);
+  transition:transform .25s var(--ease), background .25s var(--ease), border-color .25s var(--ease);
+  letter-spacing:0.01em;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:hover{ background:linear-gradient(180deg, rgba(125,211,240,0.26), rgba(125,211,240,0.1)); border-color:var(--accent); }
+.btn:active{ transform:scale(0.97); }
+.btn:disabled{ opacity:0.5; cursor:not-allowed; }
+.btn.secondary{
+  border-color:var(--border-hair-strong);
+  background:var(--bg-card);
+  color:var(--ink-soft);
+}
+.btn.secondary:hover{ background:var(--bg-card-hover); border-color:var(--ink-faint); }
+
+.camera-footer{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px 18px;
+  flex-wrap:wrap; gap:10px;
+}
+.face-count-pill{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--ink-dim);
+  display:flex; align-items:center; gap:8px;
+}
+.face-count-pill strong{ color:var(--ink); font-weight:600; }
+
+.cam-controls{ display:flex; gap:8px; }
+.icon-btn{
+  width:36px; height:36px;
+  border-radius:var(--r-sm);
+  border:1px solid var(--border-hair);
+  background:var(--bg-card);
+  color:var(--ink-dim);
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s var(--ease);
+}
+.icon-btn:hover{ color:var(--accent); border-color:var(--accent-dim); background:var(--bg-card-hover); }
+.icon-btn.active{ color:var(--accent); border-color:var(--accent-dim); }
+.icon-btn svg{ width:16px; height:16px; }
+
+/* =========================================================================
+   AVATAR CARD
+   ========================================================================= */
+.avatar-card{ flex:none; }
+.avatar-stage{
+  display:flex; flex-direction:column; align-items:center;
+  padding:6px 20px 20px;
+}
+.avatar-frame{
+  width:180px; height:180px;
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 35%, rgba(125,211,240,0.10), transparent 65%), var(--bg-deep);
+  border:1px solid var(--border-hair-strong);
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+  margin-top:6px;
+}
+.avatar-frame::after{
+  content:'';
+  position:absolute; inset:-1px;
+  border-radius:50%;
+  border:1px solid var(--accent-glow);
+  opacity:0;
+  transition:opacity .5s var(--ease);
+}
+.avatar-frame.glow::after{ opacity:1; animation:ring-breathe 2.4s ease-in-out infinite; }
+@keyframes ring-breathe{
+  0%,100%{ box-shadow:0 0 0 0 var(--accent-glow); }
+  50%{ box-shadow:0 0 0 8px rgba(125,211,240,0.08); }
+}
+.avatar-frame svg{ width:140px; height:140px; }
+
+.avatar-meta{
+  margin-top:16px; text-align:center;
+}
+.avatar-emotion-label{
+  font-family:var(--font-display);
+  font-size:16px; font-weight:600;
+  color:var(--ink);
+  text-transform:capitalize;
+  transition:color .35s var(--ease);
+}
+.avatar-sub{
+  font-family:var(--font-mono);
+  font-size:11px;
+  color:var(--ink-faint);
+  margin-top:5px;
+  letter-spacing:0.04em;
+}
+
+/* =========================================================================
+   METRIC CARDS GRID
+   ========================================================================= */
+.metric-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.metric-card{
+  background:var(--bg-card);
+  border:1px solid var(--border-hair);
+  border-radius:var(--r-md);
+  padding:16px 16px 17px;
+  box-shadow:var(--shadow-soft);
+}
+.metric-label{
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--ink-faint);
+  margin-bottom:8px;
+  display:flex; align-items:center; gap:6px;
+}
+.metric-value{
+  font-family:var(--font-display);
+  font-size:21px;
+  font-weight:600;
+  color:var(--ink);
+  line-height:1.1;
+}
+.metric-value.mono{ font-family:var(--font-mono); font-weight:500; }
+.metric-foot{
+  font-size:11px;
+  color:var(--ink-dim);
+  margin-top:6px;
+}
+
+/* Emotion analysis full-width card */
+.emotion-card .card-body{ padding:14px 20px 20px; }
+.emotion-row{
+  display:flex; align-items:center; gap:12px;
+  padding:9px 0;
+}
+.emotion-row .e-name{
+  font-size:12.5px; color:var(--ink-soft);
+  width:78px; flex:none;
+  text-transform:capitalize;
+}
+.emotion-row .e-bar-track{
+  flex:1; height:6px; border-radius:var(--r-pill);
+  background:rgba(255,255,255,0.05);
+  overflow:hidden;
+  position:relative;
+}
+.emotion-row .e-bar-fill{
+  height:100%; border-radius:var(--r-pill);
+  width:0%;
+  transition:width .5s var(--ease);
+  background:var(--ink-faint);
+}
+.emotion-row .e-pct{
+  font-family:var(--font-mono);
+  font-size:11px; color:var(--ink-dim);
+  width:38px; text-align:right; flex:none;
+}
+.emotion-row.dominant .e-name{ color:var(--ink); font-weight:600; }
+.emotion-row.dominant .e-pct{ color:var(--ink); }
+
+.status-list{ display:flex; flex-direction:column; gap:0; }
+.status-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:13px 20px;
+  border-top:1px solid var(--border-hair);
+  font-size:12.5px;
+}
+.status-row:first-child{ border-top:none; }
+.status-row .s-label{ color:var(--ink-dim); display:flex; align-items:center; gap:9px; }
+.status-row .s-value{ color:var(--ink); font-weight:500; font-family:var(--font-mono); font-size:11.5px; }
+.dot-led{
+  width:7px; height:7px; border-radius:50%;
+  background:var(--ink-faint);
+  flex:none;
+}
+.dot-led.on{ background:var(--state-happy); box-shadow:0 0 8px rgba(111,227,180,0.6); }
+.dot-led.warn{ background:var(--state-surprised); box-shadow:0 0 8px rgba(232,197,107,0.5); }
+
+/* =========================================================================
+   VOICE TOGGLE ROW
+   ========================================================================= */
+.voice-card .card-body{ padding:16px 20px 20px; display:flex; flex-direction:column; gap:14px; }
+.toggle-row{ display:flex; align-items:center; justify-content:space-between; }
+.toggle-row .t-label{ font-size:13px; color:var(--ink-soft); }
+.toggle-row .t-sub{ font-size:11px; color:var(--ink-faint); margin-top:3px; }
+.switch{
+  width:44px; height:25px; border-radius:var(--r-pill);
+  background:var(--bg-card); border:1px solid var(--border-hair-strong);
+  position:relative; flex:none; transition:background .25s var(--ease), border-color .25s var(--ease);
+}
+.switch::after{
+  content:'';
+  width:19px; height:19px; border-radius:50%;
+  background:var(--ink-dim);
+  position:absolute; top:2px; left:2px;
+  transition:transform .25s var(--ease), background .25s var(--ease);
+}
+.switch.on{ background:rgba(125,211,240,0.18); border-color:var(--accent-dim); }
+.switch.on::after{ transform:translateX(19px); background:var(--accent); }
+
+.voice-caption{
+  font-size:12.5px; color:var(--ink-dim); line-height:1.5;
+  min-height:18px;
+  font-style:italic;
+}
+.voice-caption strong{ color:var(--accent); font-style:normal; }
+
+/* =========================================================================
+   FOOTER / BRAND SECTION
+   ========================================================================= */
+.footer{
+  border-top:1px solid var(--border-hair);
+  padding:38px 0 34px;
+}
+.footer-grid{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:24px; flex-wrap:wrap;
+}
+.footer-brand{ display:flex; align-items:center; gap:14px; }
+.footer-mark{
+  width:42px; height:42px; border-radius:11px;
+  background:#000; border:1px solid var(--border-hair-strong);
+  display:flex; align-items:center; justify-content:center;
+}
+.footer-mark svg{ width:24px; height:24px; }
+.footer-brand-text h3{
+  font-family:var(--font-display); font-size:16px; font-weight:600; color:var(--ink);
+}
+.footer-brand-text p{
+  font-size:12px; color:var(--ink-faint); margin-top:3px; max-width:42ch; line-height:1.5;
+}
+
+.social-row{ display:flex; gap:10px; }
+.social-btn{
+  display:flex; align-items:center; gap:9px;
+  padding:10px 18px;
+  border-radius:var(--r-pill);
+  border:1px solid var(--border-hair-strong);
+  background:var(--bg-card);
+  font-size:12.5px; font-weight:600; color:var(--ink-soft);
+  transition:all .25s var(--ease);
+}
+.social-btn:hover{ background:var(--bg-card-hover); border-color:var(--accent-dim); color:var(--accent); transform:translateY(-1px); }
+.social-btn svg{ width:16px; height:16px; flex:none; }
+
+.footer-bottom{
+  margin-top:26px; padding-top:20px;
+  border-top:1px solid var(--border-hair);
+  display:flex; align-items:center; justify-content:space-between;
+  flex-wrap:wrap; gap:10px;
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  color:var(--ink-faint);
+  letter-spacing:0.04em;
+}
+@media (max-width:640px){
+  .footer-grid{ flex-direction:column; align-items:flex-start; }
+  .social-row{ width:100%; }
+  .social-btn{ flex:1; justify-content:center; }
+  .footer-bottom{ flex-direction:column; align-items:flex-start; }
+}
+
+/* =========================================================================
+   PERMISSION / LOADING OVERLAY
+   ========================================================================= */
+.boot-overlay{
+  position:fixed; inset:0; z-index:999;
+  background:var(--bg-void);
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:20px;
+  transition:opacity .5s var(--ease), visibility .5s var(--ease);
+}
+.boot-overlay.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+.boot-mark{
+  width:64px; height:64px; border-radius:16px;
+  background:#000; border:1px solid var(--border-hair-strong);
+  display:flex; align-items:center; justify-content:center;
+}
+.boot-mark svg{ width:36px; height:36px; }
+.boot-text{
+  font-family:var(--font-mono); font-size:12px; color:var(--ink-dim);
+  letter-spacing:0.06em;
+}
+.boot-bar{
+  width:200px; height:3px; border-radius:2px;
+  background:var(--bg-card);
+  overflow:hidden;
+}
+.boot-bar-fill{
+  height:100%; width:0%;
+  background:var(--accent);
+  border-radius:2px;
+  transition:width .3s var(--ease);
+}
+
+/* toast for errors */
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px);
+  background:var(--bg-surface); border:1px solid var(--border-hair-strong);
+  border-radius:var(--r-md);
+  padding:13px 20px; font-size:12.5px; color:var(--ink-soft);
+  box-shadow:var(--shadow-card);
+  z-index:200; opacity:0; pointer-events:none;
+  transition:opacity .3s var(--ease), transform .3s var(--ease);
+  max-width:90vw; text-align:center;
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
+
+.visually-hidden{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+/* focus visibility for a11y */
+a:focus-visible, button:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== BOOT OVERLAY ===================== -->
+<div class="boot-overlay" id="bootOverlay">
+  <div class="boot-mark">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 18H58C68 18 76 26 76 38C76 47 70.5 54 62.5 56.5L78 82H64L50.5 58H42V82H28V18ZM42 30V46H56C61 46 64 42.5 64 38C64 33.5 61 30 56 30H42Z" fill="white"/></svg>
+  </div>
+  <div class="boot-text" id="bootText">INITIALIZING NEURAL MODELS…</div>
+  <div class="boot-bar"><div class="boot-bar-fill" id="bootBar"></div></div>
+  <div id="bootHelp" style="display:none; max-width:420px; text-align:center; padding:0 24px;">
+    <p style="font-family:'Inter',sans-serif; font-size:13px; color:var(--ink-dim); line-height:1.6; margin-bottom:16px;" id="bootHelpText"></p>
+    <button class="btn" id="bootRetryBtn" style="margin:0 auto;">Retry</button>
+  </div>
+</div>
+
+<!-- ===================== TOP NAV ===================== -->
+<nav class="topnav">
+  <div class="topnav-inner">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 18H58C68 18 76 26 76 38C76 47 70.5 54 62.5 56.5L78 82H64L50.5 58H42V82H28V18ZM42 30V46H56C61 46 64 42.5 64 38C64 33.5 61 30 56 30H42Z" fill="white"/></svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">Rupanjali AI</span>
+        <span class="brand-sub">Face &amp; Emotion Intelligence</span>
+      </div>
+    </div>
+    <div class="nav-status">
+      <span class="nav-dot" id="navDot"></span>
+      <span class="full-text" id="navStatusText">System Idle</span>
+    </div>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="hero">
+    <span class="hero-eyebrow">Real-Time · Browser-Based · Open to Everyone</span>
+    <h1>Read the room, <em>one face at a time.</em></h1>
+    <p>Rupanjali AI detects faces and reads expressions live in your browser — no installs, no accounts, no data leaving your device. Built for anyone who steps in front of the camera.</p>
+  </section>
+
+  <!-- ===================== MAIN GRID ===================== -->
+  <main class="main-grid">
+
+    <!-- LEFT: CAMERA -->
+    <div class="col">
+      <div class="card camera-card">
+        <div class="card-head">
+          <span class="card-title"><span class="ttick"></span>Live Camera Feed</span>
+          <span class="card-tag" id="resTag">— × —</span>
+        </div>
+        <div class="camera-stage" id="cameraStage">
+          <video id="video" autoplay muted playsinline></video>
+          <canvas id="overlay"></canvas>
+          <div class="camera-overlay-ui">
+            <div class="corner tl"></div><div class="corner tr"></div>
+            <div class="corner bl"></div><div class="corner br"></div>
+            <div class="scan-line" id="scanLine"></div>
+          </div>
+          <div class="camera-placeholder" id="cameraPlaceholder">
+            <div class="cam-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8a2 2 0 0 1 2-2h2l1-2h6l1 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            </div>
+            <p>Start your camera to begin real-time face detection and emotion analysis. Everything runs locally in your browser.</p>
+            <button class="btn" id="startBtn">Start Camera</button>
+          </div>
+        </div>
+        <div class="camera-footer">
+          <div class="face-count-pill">
+            <span>Faces in frame:</span> <strong id="faceCount">0</strong>
+          </div>
+          <div class="cam-controls">
+            <button class="icon-btn" id="flipBtn" title="Switch camera" aria-label="Switch camera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 2.5 21 6.5l-4 4"/><path d="M21 6.5H8a5 5 0 0 0-5 5v1"/><path d="M7 21.5 3 17.5l4-4"/><path d="M3 17.5h13a5 5 0 0 0 5-5v-1"/></svg>
+            </button>
+            <button class="icon-btn" id="landmarkBtn" title="Toggle face landmarks" aria-label="Toggle landmarks">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="0.8" fill="currentColor"/><circle cx="15" cy="10" r="0.8" fill="currentColor"/><path d="M9 15c1 1 5 1 6 0"/></svg>
+            </button>
+            <button class="icon-btn" id="stopBtn" title="Stop camera" aria-label="Stop camera">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMOTION ANALYSIS (full width under camera on desktop) -->
+      <div class="card emotion-card">
+        <div class="card-head">
+          <span class="card-title"><span class="ttick"></span>Emotion Analysis</span>
+          <span class="card-tag">7 classes</span>
+        </div>
+        <div class="card-body" id="emotionList">
+          <!-- rows injected by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: AVATAR + METRICS -->
+    <div class="col">
+
+      <div class="card avatar-card">
+        <div class="card-head">
+          <span class="card-title"><span class="ttick"></span>Live Avatar</span>
+          <span class="card-tag" id="genderTag">Adaptive</span>
+        </div>
+        <div class="avatar-stage">
+          <div class="avatar-frame" id="avatarFrame">
+            <div id="avatarSvgHost"></div>
+          </div>
+          <div class="avatar-meta">
+            <div class="avatar-emotion-label" id="avatarEmotionLabel">Awaiting input</div>
+            <div class="avatar-sub" id="avatarSub">Confidence — · Gender —</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-label">Confidence</div>
+          <div class="metric-value mono" id="confValue">0%</div>
+          <div class="metric-foot">Dominant emotion score</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Estimated Age</div>
+          <div class="metric-value mono" id="ageValue">—</div>
+          <div class="metric-foot">Approximate range</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Gender Read</div>
+          <div class="metric-value" id="genderValue">—</div>
+          <div class="metric-foot" id="genderConf">Avatar follows this</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Detection</div>
+          <div class="metric-value" id="detectValue">Idle</div>
+          <div class="metric-foot" id="detectFps">— fps</div>
+        </div>
+      </div>
+
+      <div class="card voice-card">
+        <div class="card-head">
+          <span class="card-title"><span class="ttick"></span>Voice Assistant</span>
+          <span class="card-tag">English</span>
+        </div>
+        <div class="card-body">
+          <div class="toggle-row">
+            <div>
+              <div class="t-label">Spoken feedback</div>
+              <div class="t-sub">Natural English voice, paced with a cooldown</div>
+            </div>
+            <button class="switch on" id="voiceSwitch" role="switch" aria-checked="true" aria-label="Toggle voice feedback"></button>
+          </div>
+          <div class="voice-caption" id="voiceCaption">Waiting for a face to read…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title"><span class="ttick"></span>System Status</span>
+        </div>
+        <div class="status-list" style="margin-top:6px;">
+          <div class="status-row">
+            <span class="s-label"><span class="dot-led" id="ledModels"></span>Model weights</span>
+            <span class="s-value" id="statModels">Loading…</span>
+          </div>
+          <div class="status-row">
+            <span class="s-label"><span class="dot-led" id="ledCamera"></span>Camera stream</span>
+            <span class="s-value" id="statCamera">Not started</span>
+          </div>
+          <div class="status-row">
+            <span class="s-label"><span class="dot-led" id="ledVoice"></span>Speech synthesis</span>
+            <span class="s-value" id="statVoice">Standby</span>
+          </div>
+          <div class="status-row">
+            <span class="s-label"><span class="dot-led" id="ledPrivacy"></span>Data handling</span>
+            <span class="s-value">On-device only</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===================== FOOTER / BRAND ===================== -->
+<footer class="footer">
+  <div class="shell">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-mark">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 18H58C68 18 76 26 76 38C76 47 70.5 54 62.5 56.5L78 82H64L50.5 58H42V82H28V18ZM42 30V46H56C61 46 64 42.5 64 38C64 33.5 61 30 56 30H42Z" fill="white"/></svg>
+        </div>
+        <div class="footer-brand-text">
+          <h3>Rupanjali AI</h3>
+          <p>Designed and engineered by Rupanjali. A real-time face detection and emotion intelligence platform, open for anyone to use.</p>
+        </div>
+      </div>
+      <div class="social-row">
+        <a class="social-btn" href="https://www.linkedin.com/in/rupanjalicodez" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.38-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14ZM7.12 20.45H3.56V9h3.56v11.45Z"/></svg>
+          LinkedIn
+        </a>
+        <a class="social-btn" href="https://github.com/rupanjalicodez" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.58 2 12.21c0 4.47 2.87 8.26 6.84 9.6.5.1.68-.22.68-.49 0-.24-.01-1.05-.01-1.9-2.78.62-3.37-1.21-3.37-1.21-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.27 2.75 1.05a9.34 9.34 0 0 1 5 0c1.91-1.32 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.93-2.35 4.8-4.58 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.21C22 6.58 17.52 2 12 2Z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>RUPANJALI AI © 2026 — RUNS ENTIRELY ON-DEVICE</span>
+      <span id="footerBuildTag">BUILD · CDN MODELS · CLIENT-SIDE</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===================== FACE-API.JS (CDN) ===================== -->
+<script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/dist/face-api.js" onerror="
+  var s=document.createElement('script');
+  s.src='https://unpkg.com/@vladmandic/face-api@1.7.15/dist/face-api.js';
+  document.head.appendChild(s);
+"></script>
+
+<script>
+/* =========================================================================
+   APP STATE
+   ========================================================================= */
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.15/model';
+
+const EMOTIONS = ['neutral','happy','sad','angry','fearful','disgusted','surprised'];
+const EMOTION_COLOR = {
+  happy:'var(--state-happy)', sad:'var(--state-sad)', angry:'var(--state-angry)',
+  neutral:'var(--state-neutral)', surprised:'var(--state-surprised)',
+  fearful:'var(--state-fearful)', disgusted:'var(--state-disgusted)'
+};
+const VOICE_LINES = {
+  happy:["You look happy today.", "That's a great smile.", "You seem genuinely cheerful."],
+  sad:["You appear a little low right now.", "You seem a bit down today.", "Take it easy, you look tired."],
+  angry:["You seem tense at the moment.", "You look a little frustrated.", "Take a breath, you seem on edge."],
+  neutral:["You appear calm and focused.", "You look composed right now.", "Nice and steady expression."],
+  surprised:["You seem surprised.", "That caught you off guard.", "You look quite astonished."],
+  fearful:["You appear a little uneasy.", "You seem slightly anxious.", "You look a bit on alert."],
+  disgusted:["You seem a little put off.", "That expression says it all.", "You appear unimpressed."]
+};
+
+const state = {
+  modelsLoaded:false,
+  streaming:false,
+  facingMode:'user',
+  showLandmarks:true,
+  voiceEnabled:true,
+  lastSpoken:0,
+  speakCooldownMs:9000,
+  lastEmotion:null,
+  currentGender:'female',
+  rafId:null,
+  videoStream:null,
+  englishVoice:null,
+  smoothed:{}, // smoothed emotion scores
+};
+
+EMOTIONS.forEach(e => state.smoothed[e] = e === 'neutral' ? 1 : 0);
+
+/* =========================================================================
+   DOM REFS
+   ========================================================================= */
+const $ = id => document.getElementById(id);
+const video = $('video');
+const overlay = $('overlay');
+const cameraPlaceholder = $('cameraPlaceholder');
+const startBtn = $('startBtn');
+const stopBtn = $('stopBtn');
+const flipBtn = $('flipBtn');
+const landmarkBtn = $('landmarkBtn');
+const scanLine = $('scanLine');
+const faceCountEl = $('faceCount');
+const resTag = $('resTag');
+const navDot = $('navDot');
+const navStatusText = $('navStatusText');
+const bootOverlay = $('bootOverlay');
+const bootText = $('bootText');
+const bootBar = $('bootBar');
+const toast = $('toast');
+
+const confValue = $('confValue');
+const ageValue = $('ageValue');
+const genderValue = $('genderValue');
+const genderConf = $('genderConf');
+const genderTag = $('genderTag');
+const detectValue = $('detectValue');
+const detectFps = $('detectFps');
+
+const avatarEmotionLabel = $('avatarEmotionLabel');
+const avatarSub = $('avatarSub');
+const avatarFrame = $('avatarFrame');
+const avatarSvgHost = $('avatarSvgHost');
+
+const voiceSwitch = $('voiceSwitch');
+const voiceCaption = $('voiceCaption');
+
+const statModels = $('statModels'); const ledModels = $('ledModels');
+const statCamera = $('statCamera'); const ledCamera = $('ledCamera');
+const statVoice = $('statVoice'); const ledVoice = $('ledVoice');
+
+/* =========================================================================
+   TOAST HELPER
+   ========================================================================= */
+function showToast(msg, ms=3600){
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=> toast.classList.remove('show'), ms);
+}
+
+/* =========================================================================
+   EMOTION LIST UI (build rows once)
+   ========================================================================= */
+const emotionList = $('emotionList');
+EMOTIONS.forEach(name => {
+  const row = document.createElement('div');
+  row.className = 'emotion-row';
+  row.id = `erow-${name}`;
+  row.innerHTML = `
+    <span class="e-name">${name}</span>
+    <span class="e-bar-track"><span class="e-bar-fill" id="ebar-${name}"></span></span>
+    <span class="e-pct" id="epct-${name}">0%</span>
+  `;
+  emotionList.appendChild(row);
+});
+
+function updateEmotionUI(scores){
+  let dominant = 'neutral', dominantVal = -1;
+  EMOTIONS.forEach(name => {
+    const v = scores[name] ?? 0;
+    if (v > dominantVal){ dominantVal = v; dominant = name; }
+  });
+  EMOTIONS.forEach(name => {
+    const v = Math.round((scores[name] ?? 0) * 100);
+    const bar = $(`ebar-${name}`);
+    const pct = $(`epct-${name}`);
+    bar.style.width = v + '%';
+    bar.style.background = name === dominant ? EMOTION_COLOR[name] : 'var(--ink-faint)';
+    pct.textContent = v + '%';
+    $(`erow-${name}`).classList.toggle('dominant', name === dominant);
+  });
+  return { dominant, dominantVal };
+}
+
+/* =========================================================================
+   AVATAR — CUSTOM SVG (male / female), morphing facial features
+   Designed as a clean, premium, minimal portrait silhouette.
+   ========================================================================= */
+function buildAvatarSVG(){
+  // Single SVG with named groups we will manipulate via JS for expressions.
+  return `
+  <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="avatarSvg">
+    <defs>
+      <radialGradient id="faceGrad" cx="50%" cy="38%" r="65%">
+        <stop offset="0%" stop-color="var(--face-light)"/>
+        <stop offset="100%" stop-color="var(--face-base)"/>
+      </radialGradient>
+      <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--hair-light)"/>
+        <stop offset="100%" stop-color="var(--hair-dark)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- hair back -->
+    <g id="hairBack"></g>
+
+    <!-- neck -->
+    <path id="neckShape" d="M82 150 L82 175 Q100 184 118 175 L118 150 Z" fill="var(--face-base)"/>
+
+    <!-- shoulders / garment -->
+    <path id="garment" d="M40 200 Q50 165 100 162 Q150 165 160 200 Z" fill="var(--garment-color)"/>
+
+    <!-- face base -->
+    <ellipse id="faceShape" cx="100" cy="104" rx="42" ry="48" fill="url(#faceGrad)"/>
+
+    <!-- ears -->
+    <ellipse cx="58" cy="106" rx="6" ry="9" fill="var(--face-base)"/>
+    <ellipse cx="142" cy="106" rx="6" ry="9" fill="var(--face-base)"/>
+
+    <!-- eyebrows -->
+    <g id="brows" stroke="var(--brow-color)" stroke-width="4" stroke-linecap="round" fill="none">
+      <path id="browL" d="M73 88 Q82 83 92 87"/>
+      <path id="browR" d="M108 87 Q118 83 127 88"/>
+    </g>
+
+    <!-- eyes -->
+    <g id="eyes">
+      <path id="eyeL" d="M75 98 Q83 93 91 98 Q83 103 75 98 Z" fill="var(--eye-white)"/>
+      <circle id="pupilL" cx="83" cy="98" r="3.4" fill="var(--eye-iris)"/>
+      <path id="eyeR" d="M109 98 Q117 93 125 98 Q117 103 109 98 Z" fill="var(--eye-white)"/>
+      <circle id="pupilR" cx="117" cy="98" r="3.4" fill="var(--eye-iris)"/>
+    </g>
+
+    <!-- nose -->
+    <path id="nose" d="M97 100 Q95 112 92 116 Q97 120 103 116" stroke="var(--nose-color)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+
+    <!-- mouth -->
+    <path id="mouth" stroke="var(--mouth-color)" stroke-width="3.4" fill="none" stroke-linecap="round" d="M84 130 Q100 134 116 130"/>
+
+    <!-- blush (subtle, premium not childish) -->
+    <ellipse cx="74" cy="115" rx="7" ry="4" fill="var(--blush-color)" opacity="0.35"/>
+    <ellipse cx="126" cy="115" rx="7" ry="4" fill="var(--blush-color)" opacity="0.35"/>
+
+    <!-- hair front -->
+    <g id="hairFront"></g>
+  </svg>`;
+}
+
+const HAIR = {
+  female: {
+    back: `<path d="M58 64 Q56 130 64 168 Q70 145 70 110 Z" fill="url(#hairGrad)"/>
+           <path d="M142 64 Q144 130 136 168 Q130 145 130 110 Z" fill="url(#hairGrad)"/>`,
+    front:`<path d="M58 96 Q54 60 100 50 Q146 60 142 96 Q140 70 100 64 Q60 70 58 96 Z" fill="url(#hairGrad)"/>
+           <path d="M60 70 Q66 56 80 52 Q70 62 66 76 Z" fill="url(#hairGrad)" opacity="0.9"/>`
+  },
+  male: {
+    back: ``,
+    front:`<path d="M60 92 Q56 58 100 52 Q144 58 140 92 Q136 68 100 62 Q64 68 60 92 Z" fill="url(#hairGrad)"/>
+           <path d="M70 58 Q85 48 100 50 Q92 54 84 60 Z" fill="url(#hairGrad)" opacity="0.85"/>`
+  }
+};
+
+const PALETTE = {
+  female:{
+    '--face-light':'#F4D6BE', '--face-base':'#E8BE9E',
+    '--hair-light':'#3A2A22', '--hair-dark':'#1C1310',
+    '--garment-color':'#5C4A86', '--brow-color':'#2A1D17',
+    '--eye-white':'#FFFFFF', '--eye-iris':'#3B2A20',
+    '--nose-color':'#C99774', '--mouth-color':'#A85C56',
+    '--blush-color':'#E78B8B'
+  },
+  male:{
+    '--face-light':'#E9C39E', '--face-base':'#D9A97D',
+    '--hair-light':'#2E2420', '--hair-dark':'#14100E',
+    '--garment-color':'#2E3A4A', '--brow-color':'#22190F',
+    '--eye-white':'#FFFFFF', '--eye-iris':'#3A2615',
+    '--nose-color':'#BD8B62', '--mouth-color':'#9C5B49',
+    '--blush-color':'#D98C75'
+  }
+};
+
+avatarSvgHost.innerHTML = buildAvatarSVG();
+applyAvatarGender('female', true);
+
+function applyAvatarGender(gender, force=false){
+  if (!force && gender === state.currentGender) return;
+  state.currentGender = gender;
+  const pal = PALETTE[gender];
+  Object.entries(pal).forEach(([k,v]) => avatarFrame.style.setProperty(k, v));
+  $('hairBack').innerHTML = HAIR[gender].back;
+  $('hairFront').innerHTML = HAIR[gender].front;
+  genderTag.textContent = gender === 'male' ? 'Male avatar' : 'Female avatar';
+}
+
+/* Expression target shapes: brows, eyes(scaleY), mouth path, pupil offset */
+const EXPRESSIONS = {
+  neutral:   { browL:"M73 88 Q82 83 92 87", browR:"M108 87 Q118 83 127 88", mouth:"M84 130 Q100 134 116 130", eyeScale:1,    pupilDy:0 },
+  happy:     { browL:"M73 86 Q82 81 92 85", browR:"M108 85 Q118 81 127 86", mouth:"M82 128 Q100 142 118 128", eyeScale:0.78, pupilDy:0 },
+  sad:       { browL:"M73 90 Q83 95 92 90", browR:"M108 90 Q117 95 127 90", mouth:"M84 134 Q100 124 116 134", eyeScale:0.85,pupilDy:1 },
+  angry:     { browL:"M74 92 Q83 84 92 90", browR:"M108 90 Q117 84 126 92", mouth:"M85 132 Q100 127 115 132", eyeScale:0.7, pupilDy:0 },
+  surprised: { browL:"M72 82 Q82 75 92 81", browR:"M108 81 Q118 75 128 82", mouth:"M91 128 Q100 140 109 128 Q100 134 91 128 Z", eyeScale:1.35,pupilDy:0 },
+  fearful:   { browL:"M72 84 Q82 78 92 83", browR:"M108 83 Q118 78 128 84", mouth:"M88 130 Q100 127 112 130", eyeScale:1.2, pupilDy:-0.5 },
+  disgusted: { browL:"M74 90 Q83 86 90 89", browR:"M110 89 Q117 86 126 90", mouth:"M86 132 Q100 128 114 133 Q108 130 100 131 Q92 130 86 132 Z", eyeScale:0.75,pupilDy:0 },
+};
+
+let avatarRAF = null;
+let currentExpr = { ...EXPRESSIONS.neutral };
+let targetExpr = { ...EXPRESSIONS.neutral };
+
+function setAvatarExpression(emotionName){
+  targetExpr = EXPRESSIONS[emotionName] || EXPRESSIONS.neutral;
+  if (!avatarRAF) animateAvatar();
+}
+
+function animateAvatar(){
+  // path morphing via simple cross-fade using opacity swap is complex for 'd' interpolation;
+  // instead we directly set target path (browser will not tween 'd' smoothly without extra libs),
+  // so we apply a quick CSS-eased scale/transform plus instant path swap timed with a fade.
+  const browL = $('browL'), browR = $('browR'), mouth = $('mouth');
+  const eyeL = $('eyeL'), eyeR = $('eyeR'), pupilL = $('pupilL'), pupilR = $('pupilR');
+
+  [browL,browR,mouth,eyeL,eyeR].forEach(el => el.style.transition = 'opacity .18s ease');
+  [browL,browR,mouth].forEach(el => el.style.opacity = 0.25);
+
+  setTimeout(() => {
+    browL.setAttribute('d', targetExpr.browL);
+    browR.setAttribute('d', targetExpr.browR);
+    mouth.setAttribute('d', targetExpr.mouth);
+    [browL,browR,mouth].forEach(el => el.style.opacity = 1);
+  }, 160);
+
+  const eyeGroup = $('eyes');
+  eyeGroup.style.transition = 'transform .35s cubic-bezier(.22,1,.36,1)';
+  eyeGroup.style.transformOrigin = '100px 98px';
+  eyeGroup.style.transform = `scaleY(${targetExpr.eyeScale})`;
+
+  pupilL.style.transition = pupilR.style.transition = 'transform .35s ease';
+  pupilL.style.transform = `translateY(${targetExpr.pupilDy}px)`;
+  pupilR.style.transform = `translateY(${targetExpr.pupilDy}px)`;
+
+  avatarRAF = null;
+}
+
+/* =========================================================================
+   FACE-API MODEL LOADING
+   ========================================================================= */
+async function loadModels(){
+  // Guard: the face-api.js library script (loaded via CDN) must finish
+  // executing and register `window.faceapi` before we can use it.
+  // Wait for it explicitly instead of assuming script order/timing.
+  const FACEAPI_WAIT_TIMEOUT_MS = 12000;
+  const waitStart = performance.now();
+  while (typeof faceapi === 'undefined'){
+    if (performance.now() - waitStart > FACEAPI_WAIT_TIMEOUT_MS){
+      bootText.textContent = 'FACE-API LIBRARY FAILED TO LOAD';
+      statModels.textContent = 'Failed';
+      document.getElementById('bootHelp').style.display = 'block';
+      document.getElementById('bootHelpText').innerHTML =
+        'The face-api.js library itself could not be downloaded from the CDN — this usually means a network/firewall/ad-blocker is blocking <code style="color:var(--accent)">cdn.jsdelivr.net</code>, or the connection dropped.<br><br>' +
+        'Try disabling browser extensions (ad-blockers especially), check your network, or try a different network/browser, then retry.';
+      document.getElementById('bootRetryBtn').addEventListener('click', () => location.reload());
+      return;
+    }
+    await new Promise(r => setTimeout(r, 100));
+  }
+
+  // file:// origin cannot fetch cross-origin CDN resources in most browsers.
+  // Detect this upfront and show clear guidance instead of a generic failure.
+  if (window.location.protocol === 'file:'){
+    bootText.textContent = 'LOCAL FILE MODE DETECTED';
+    bootBar.style.width = '0%';
+    statModels.textContent = 'Blocked';
+    document.getElementById('bootHelp').style.display = 'block';
+    document.getElementById('bootHelpText').innerHTML =
+      'This file was opened directly from disk (<code style="color:var(--accent)">file://</code>), and browsers block AI model downloads from local files for security reasons.<br><br>' +
+      'Run it from a local server instead — see the on-screen instructions below this window, or in the README. Most editors (VS Code "Live Server") or a single terminal command will do it in seconds.';
+    document.getElementById('bootRetryBtn').addEventListener('click', () => location.reload());
+    return;
+  }
+  try{
+    bootText.textContent = 'LOADING FACE DETECTOR…';
+    bootBar.style.width = '15%';
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    bootBar.style.width = '40%';
+    bootText.textContent = 'LOADING LANDMARK MODEL…';
+    await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+    bootBar.style.width = '60%';
+    bootText.textContent = 'LOADING EXPRESSION MODEL…';
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+    bootBar.style.width = '80%';
+    bootText.textContent = 'LOADING AGE / GENDER MODEL…';
+    await faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL);
+    bootBar.style.width = '100%';
+
+    state.modelsLoaded = true;
+    statModels.textContent = 'Ready';
+    ledModels.classList.add('on');
+    bootText.textContent = 'READY';
+    setTimeout(()=> bootOverlay.classList.add('hidden'), 450);
+    navStatusText.textContent = 'Models ready';
+  } catch(err){
+    console.error(err);
+    bootText.textContent = 'MODEL LOAD FAILED';
+    statModels.textContent = 'Failed';
+    document.getElementById('bootHelp').style.display = 'block';
+    document.getElementById('bootHelpText').innerHTML =
+      'Could not download the AI models. This usually means no internet connection, a blocked CDN, or a strict ad-blocker / firewall.<br><br>' +
+      'Check your connection and try again. If it keeps failing, try a different network.';
+    document.getElementById('bootRetryBtn').addEventListener('click', () => location.reload());
+    showToast('Could not load AI models. Check your internet connection and reload.', 6000);
+  }
+}
+loadModels();
+
+/* =========================================================================
+   CAMERA CONTROL
+   ========================================================================= */
+async function startCamera(){
+  if (!state.modelsLoaded){
+    showToast('Models are still loading — one moment.');
+    return;
+  }
+  try{
+    const constraints = { video: { facingMode: state.facingMode, width:{ideal:960}, height:{ideal:720} }, audio:false };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    state.videoStream = stream;
+    video.srcObject = stream;
+    await video.play();
+
+    cameraPlaceholder.style.display = 'none';
+    scanLine.classList.add('active');
+    state.streaming = true;
+
+    statCamera.textContent = 'Streaming';
+    ledCamera.classList.add('on');
+    navDot.classList.add('live');
+    navStatusText.textContent = 'Analyzing live feed';
+
+    sizeOverlay();
+    detectLoop();
+  } catch(err){
+    console.error(err);
+    let msg = 'Camera access was blocked or unavailable.';
+    if (err.name === 'NotAllowedError') msg = 'Camera permission was denied. Allow camera access in your browser settings to continue.';
+    if (err.name === 'NotFoundError') msg = 'No camera was found on this device.';
+    showToast(msg, 5000);
+  }
+}
+
+function stopCamera(){
+  if (state.videoStream){
+    state.videoStream.getTracks().forEach(t => t.stop());
+  }
+  state.streaming = false;
+  if (state.rafId) cancelAnimationFrame(state.rafId);
+  scanLine.classList.remove('active');
+  cameraPlaceholder.style.display = 'flex';
+  faceCountEl.textContent = '0';
+  detectValue.textContent = 'Idle';
+  detectFps.textContent = '— fps';
+  navDot.classList.remove('live');
+  navStatusText.textContent = 'System Idle';
+  statCamera.textContent = 'Stopped';
+  ledCamera.classList.remove('on');
+  const ctx = overlay.getContext('2d');
+  ctx.clearRect(0,0,overlay.width, overlay.height);
+}
+
+function sizeOverlay(){
+  const rect = video.getBoundingClientRect();
+  overlay.width = rect.width;
+  overlay.height = rect.height;
+  resTag.textContent = `${video.videoWidth || rect.width|0} × ${video.videoHeight || rect.height|0}`;
+}
+window.addEventListener('resize', () => { if(state.streaming) sizeOverlay(); });
+
+startBtn.addEventListener('click', startCamera);
+stopBtn.addEventListener('click', stopCamera);
+
+flipBtn.addEventListener('click', async () => {
+  state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
+  if (state.streaming){
+    stopCamera();
+    await new Promise(r => setTimeout(r, 200));
+    startCamera();
+  }
+  showToast(`Camera switched to ${state.facingMode === 'user' ? 'front' : 'rear'} lens`);
+});
+
+landmarkBtn.addEventListener('click', () => {
+  state.showLandmarks = !state.showLandmarks;
+  landmarkBtn.classList.toggle('active', state.showLandmarks);
+});
+landmarkBtn.classList.add('active');
+
+/* =========================================================================
+   DETECTION LOOP
+   ========================================================================= */
+let lastFrameTime = performance.now();
+let fpsSmoothed = 0;
+
+async function detectLoop(){
+  if (!state.streaming) return;
+
+  const now = performance.now();
+  const dt = now - lastFrameTime;
+  lastFrameTime = now;
+  const fps = 1000 / dt;
+  fpsSmoothed = fpsSmoothed ? fpsSmoothed * 0.9 + fps * 0.1 : fps;
+
+  try{
+    const detections = await faceapi
+      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 256, scoreThreshold: 0.5 }))
+      .withFaceLandmarks(true)
+      .withFaceExpressions()
+      .withAgeAndGender();
+
+    renderDetections(detections);
+    faceCountEl.textContent = detections.length;
+    detectValue.textContent = detections.length > 0 ? 'Active' : 'Scanning';
+    detectFps.textContent = `${fpsSmoothed.toFixed(0)} fps`;
+
+    if (detections.length > 0){
+      // use the largest face (closest to camera) as the "primary" subject
+      const primary = detections.reduce((a,b) => (a.detection.box.area > b.detection.box.area ? a : b));
+      handlePrimaryFace(primary);
+    } else {
+      avatarEmotionLabel.textContent = 'Awaiting input';
+      avatarSub.textContent = 'No face detected';
+    }
+  } catch(e){
+    // fail silently per-frame to keep loop alive
+  }
+
+  state.rafId = requestAnimationFrame(detectLoop);
+}
+
+function renderDetections(detections){
+  const ctx = overlay.getContext('2d');
+  ctx.clearRect(0,0, overlay.width, overlay.height);
+  if (!detections.length) return;
+
+  const displaySize = { width: overlay.width, height: overlay.height };
+  faceapi.matchDimensions(overlay, displaySize);
+  const resized = faceapi.resizeResults(detections, displaySize);
+
+  resized.forEach(d => {
+    const box = d.detection.box;
+    ctx.strokeStyle = 'rgba(125,211,240,0.9)';
+    ctx.lineWidth = 2;
+    roundRectStroke(ctx, box.x, box.y, box.width, box.height, 10);
+
+    // small label
+    const topEmotion = Object.entries(d.expressions).sort((a,b)=>b[1]-a[1])[0];
+    ctx.font = '600 12px Inter, sans-serif';
+    const label = `${topEmotion[0]} ${(topEmotion[1]*100).toFixed(0)}%`;
+    const textW = ctx.measureText(label).width;
+    ctx.fillStyle = 'rgba(10,13,18,0.78)';
+    roundRectFill(ctx, box.x, box.y - 26, textW + 16, 22, 7);
+    ctx.fillStyle = '#7DD3F0';
+    ctx.fillText(label, box.x + 8, box.y - 10);
+
+    if (state.showLandmarks && d.landmarks){
+      ctx.fillStyle = 'rgba(125,211,240,0.85)';
+      d.landmarks.positions.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.4, 0, Math.PI*2);
+        ctx.fill();
+      });
+    }
+  });
+}
+
+function roundRectStroke(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.stroke();
+}
+function roundRectFill(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); ctx.fill();
+}
+
+/* =========================================================================
+   PRIMARY FACE HANDLER — smoothing, UI updates, avatar, voice
+   ========================================================================= */
+const SMOOTHING = 0.25; // exponential smoothing factor
+
+function handlePrimaryFace(face){
+  // smooth expression scores to avoid jitter
+  EMOTIONS.forEach(name => {
+    const raw = face.expressions[name] ?? 0;
+    state.smoothed[name] = state.smoothed[name] * (1 - SMOOTHING) + raw * SMOOTHING;
+  });
+
+  const { dominant, dominantVal } = updateEmotionUI(state.smoothed);
+
+  confValue.textContent = Math.round(dominantVal * 100) + '%';
+  ageValue.textContent = Math.round(face.age) + ' yrs';
+  const genderLabel = face.gender === 'male' ? 'Male' : 'Female';
+  genderValue.textContent = genderLabel;
+  genderConf.textContent = `${Math.round(face.genderProbability*100)}% confidence`;
+
+  applyAvatarGender(face.gender === 'male' ? 'male' : 'female');
+
+  if (dominant !== state.lastEmotion){
+    setAvatarExpression(dominant);
+    avatarFrame.classList.add('glow');
+    state.lastEmotion = dominant;
+  }
+  avatarEmotionLabel.textContent = dominant;
+  avatarSub.textContent = `Confidence ${Math.round(dominantVal*100)}% · ${genderLabel}`;
+
+  maybeSpeak(dominant);
+}
+
+/* =========================================================================
+   VOICE FEEDBACK — Web Speech API, English only, with cooldown
+   ========================================================================= */
+function pickEnglishVoice(){
+  const voices = speechSynthesis.getVoices();
+  if (!voices.length) return null;
+  // Prefer Indian English, then any English voice
+  let v = voices.find(v => /en-IN/i.test(v.lang));
+  if (!v) v = voices.find(v => /^en(-|_)/i.test(v.lang));
+  if (!v) v = voices.find(v => /english/i.test(v.name));
+  return v || voices[0];
+}
+if ('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = () => { state.englishVoice = pickEnglishVoice(); };
+  state.englishVoice = pickEnglishVoice();
+  statVoice.textContent = 'Ready';
+  ledVoice.classList.add('on');
+} else {
+  statVoice.textContent = 'Unsupported';
+}
+
+function maybeSpeak(emotion){
+  if (!state.voiceEnabled) return;
+  if (!('speechSynthesis' in window)) return;
+  const now = Date.now();
+  if (now - state.lastSpoken < state.speakCooldownMs) return;
+
+  const lines = VOICE_LINES[emotion] || VOICE_LINES.neutral;
+  const text = lines[Math.floor(Math.random() * lines.length)];
+
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'en-IN';
+  if (state.englishVoice) utter.voice = state.englishVoice;
+  utter.rate = 0.98;
+  utter.pitch = 1.0;
+
+  speechSynthesis.speak(utter);
+  state.lastSpoken = now;
+  voiceCaption.innerHTML = `Just said: <strong>"${text}"</strong>`;
+  ledVoice.classList.add('warn');
+  setTimeout(()=> ledVoice.classList.remove('warn'), 1200);
+}
+
+voiceSwitch.addEventListener('click', () => {
+  state.voiceEnabled = !state.voiceEnabled;
+  voiceSwitch.classList.toggle('on', state.voiceEnabled);
+  voiceSwitch.setAttribute('aria-checked', String(state.voiceEnabled));
+  if (!state.voiceEnabled){
+    speechSynthesis.cancel();
+    voiceCaption.textContent = 'Voice feedback muted.';
+  } else {
+    voiceCaption.textContent = 'Voice feedback resumed.';
+  }
+});
+
+/* =========================================================================
+   CLEANUP
+   ========================================================================= */
+window.addEventListener('beforeunload', () => {
+  if (state.videoStream) state.videoStream.getTracks().forEach(t => t.stop());
+});
+</script>
+</body>
+</html>
